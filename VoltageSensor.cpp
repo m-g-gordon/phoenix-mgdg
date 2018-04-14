@@ -22,47 +22,34 @@ extern boolean g_fLowVoltageShutdown;    // If set the bot shuts down because th
 
 // Part of Original Phoenix code. Not used
 bool CheckVoltage() {
-#ifdef  cVoltagePin   
-#ifdef cTurnOffVol
-    Voltage = analogRead(cVoltagePin); // Battery voltage
-    Voltage = ((long)Voltage*1955)/1000;
+ 
+    double voltage = voltageRead();  // Battery Voltage
+    
+    if (!g_fLowVoltageShutdown) 
+    {
+        if (voltage < 9.0) 
+        {
+            DBGSerial.println("Voltage is less than threshold, turning off robot");
 
-    if (!g_fLowVoltageShutdown) {
-        if ((Voltage < cTurnOffVol) || (Voltage >= 1999)) {
-#ifdef DBGSerial          
-            DBGSerial.println("Voltage went low, turn off robot");
-#endif            
-       //Turn off
-      g_ControlState.BodyPos.x = 0;
-      g_ControlState.BodyPos.y = 0;
-      g_ControlState.BodyPos.z = 0;
-      g_ControlState.BodyRot1.x = 0;
-      g_ControlState.BodyRot1.y = 0;
-      g_ControlState.BodyRot1.z = 0;
-      g_ControlState.TravelLength.x = 0;
-      g_ControlState.TravelLength.z = 0;
-      g_ControlState.TravelLength.y = 0;
-      g_ControlState.SelectedLeg = 255;
-      g_fLowVoltageShutdown = 1;
-            s_bLVBeepCnt = 0;    // how many times we beeped...
-      g_ControlState.fHexOn = false;
-  }
-#ifdef cTurnOnVol
-    } else if ((Voltage > cTurnOnVol) && (Voltage < 1999)) {
-#ifdef DBGSerial
-            DBGSerial.println("Voltage restored");
-#endif          
-            g_fLowVoltageShutdown = 0;
+            //Turn off Robot
+            g_ControlState.BodyPos.x = 0;
+            g_ControlState.BodyPos.y = 0;
+            g_ControlState.BodyPos.z = 0;
+            g_ControlState.BodyRot1.x = 0;
+            g_ControlState.BodyRot1.y = 0;
+            g_ControlState.BodyRot1.z = 0;
+            g_ControlState.TravelLength.x = 0;
+            g_ControlState.TravelLength.z = 0;
+            g_ControlState.TravelLength.y = 0;
+            g_ControlState.SelectedLeg = 255;
+
+            g_fLowVoltageShutdown = true;
             
-#endif      
-    } else {
-        if (s_bLVBeepCnt < 5) {
-          s_bLVBeepCnt++;
-          MSound(SOUND_PIN, 1, 45, 2000);
+            g_ControlState.fHexOn = false;
+
+            // Setup Blink on Status LED
         }
-        delay(2000);
-    }
-#endif  
-#endif
-  return g_fLowVoltageShutdown;
+    } 
+
+    return g_fLowVoltageShutdown;
 }

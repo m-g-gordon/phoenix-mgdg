@@ -24,7 +24,7 @@
 #include <PS2X_lib.h>
 #include <pins_arduino.h>
 
-#include "Hex_globals.h"
+#include "Hex_Globals.h"
 
 #define BalanceDivFactor 6    //;Other values than 6 can be used, testing...CAUTION!! At your own risk ;)
 
@@ -296,22 +296,27 @@ void setup() {
   // BlueTooth Serial
   DBGSerial.begin(9600);
 
+  // debug stuff
+  DBGSerial.write("Phoenix Program Start\n\r");
+  delay(10);
+
   // Init our ServoDriver
   g_ServoDriver.Init();
+
+
+  //Checks to see if our Servo Driver support a GP Player
+  pinMode(PS2_CMD, INPUT);
+  if (!digitalRead(PS2_CMD))
+  {
+
+    g_ServoDriver.SSCForwarder();
+  }
 
 #ifndef PT_ON_SSC32
   MAESTROSerial.begin(9600);
 #endif
-
-  pinMode(PS2_CMD, INPUT);
-  if (!digitalRead(PS2_CMD))
-    g_ServoDriver.SSCForwarder();
-
-  //Checks to see if our Servo Driver support a GP Player
-
-  // debug stuff
-  DBGSerial.write("Phoenix Program Start\n\r");
-  delay(10);
+  
+  
 
   pinMode(HEADLIGHT, OUTPUT);
   pinMode(VIDEOTRANSMIT, OUTPUT);
@@ -320,21 +325,22 @@ void setup() {
   digitalWrite(STATUSLED, HIGH);
 
   // Initial values for pan and tilt servo
-  ptposition_x = 1400;
-  ptposition_y = 1200;
+  ptposition_x = 1450;
+  ptposition_y = 1500;
 
   #ifndef PT_ON_SSC32
   g_PTServoDriver.setTarget (PT_TILT, 4 * ptposition_y);
   g_PTServoDriver.setTarget (PT_PAN, 4 * ptposition_x);
   #else
   g_ServoDriver.UpdateTiltPosition(TILT_ON_SSC32, ptposition_y);
-  g_ServoDriver.UpdatePanPosition(TILT_ON_SSC32, ptposition_x);
+  g_ServoDriver.UpdatePanPosition(PAN_ON_SSC32, ptposition_x);
+  delay(100);
   #endif
     
   //Sensor Initialization
   InitializeUltrasonic();
 
-  //Tars Init Positions
+  //Legs Init Positions
   for (LegIndex = 0; LegIndex <= 5; LegIndex++ )
   {
     LegPosX[LegIndex] = (short)pgm_read_word(&cInitPosX[LegIndex]);    //Set start positions for each leg
@@ -391,7 +397,9 @@ void loop(void)
   //Read input
   CheckVoltage(); // check our voltages...
   if (!g_fLowVoltageShutdown)
+  {
     g_InputController.ControlInput();
+  }
 
   // Do Pan Tilt Outputs
   //Pan Right
@@ -482,7 +490,7 @@ void loop(void)
   //Ultrasonic Sensing
   if(g_ControlState.UseUltrasonics)
   {
-    //calcSensorDistances();
+    calcSensorDistances();
   }
 
 #ifdef OPT_GPPLAYER
@@ -653,7 +661,8 @@ void StartUpdateServos()
   // First call off to the init...
   g_ServoDriver.BeginServoUpdate();    // Start the update
 
-  for (LegIndex = 0; LegIndex <= 5; LegIndex++) {
+  for (LegIndex = 0; LegIndex <= 5; LegIndex++) 
+  {
     g_ServoDriver.OutputServoInfoForLeg(LegIndex, CoxaAngle1[LegIndex], FemurAngle1[LegIndex], TibiaAngle1[LegIndex]);
   }
 }
@@ -671,9 +680,12 @@ void SingleLegControl(void)
             (LegPosY[cLM] == (short)pgm_read_word(&cInitPosY[cLM])) &&
             (LegPosY[cLF] == (short)pgm_read_word(&cInitPosY[cLF]));
 
-  if (g_ControlState.SelectedLeg <= 5) {
-    if (g_ControlState.SelectedLeg != PrevSelectedLeg) {
-      if (AllDown) { //Lift leg a bit when it got selected
+  if (g_ControlState.SelectedLeg <= 5) 
+  {
+    if (g_ControlState.SelectedLeg != PrevSelectedLeg) 
+    {
+      if (AllDown) 
+      { //Lift leg a bit when it got selected
         LegPosY[g_ControlState.SelectedLeg] = (short)pgm_read_word(&cInitPosY[g_ControlState.SelectedLeg]) - 20;
 
         //Store current status

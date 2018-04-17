@@ -29,10 +29,6 @@
 //comment if terminal monitor is not required
 #define OPT_TERMINAL_MONITOR  
 
-//uncomment the board you want to use
-#define __BOTBOARDUINO__    //botboarduino board
-//#define __BOTBOARD_ARDUINOPROMINI__  //arduino pro mini on botboard (originally for BasicAtomPro)
-
 //====================================================================
 #ifdef OPT_TERMINAL_MONITOR   // turning off terminal monitor will turn these off as well...
 #define OPT_SSC_FORWARDER  // only useful if terminal monitor is enabled

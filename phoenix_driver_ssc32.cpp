@@ -194,7 +194,7 @@ void ServoDriver::UpdateTiltPosition(int channel, int pos_y)    // Start the upd
 
 
 //------------------------------------------------------------------------------------------
-//[BeginServoUpdate] Does whatever preperation that is needed to starrt a move of our servos
+//[BeginServoUpdate] Does whatever preparation that is needed to start a move of our servos
 //------------------------------------------------------------------------------------------
 void ServoDriver::BeginServoUpdate(void)    // Start the update
 {
@@ -388,9 +388,9 @@ void ServoDriver::FindServoOffsets()
 
   if (CheckVoltage()) {
     // Voltage is low...
-    Serial.println("Low Voltage: fix or hit $ to abort");
+    DBGSerial.println("Low Voltage: fix or hit $ to abort");
     while (CheckVoltage()) {
-      if (Serial.read() == '$')  return;
+      if (DBGSerial.read() == '$')  return;
     }
   }
 
@@ -399,17 +399,17 @@ void ServoDriver::FindServoOffsets()
     abSSCServoNum[sSN * NUMSERVOSPERLEG + 0] = pgm_read_byte(&cCoxaPin[sSN]);
     abSSCServoNum[sSN * NUMSERVOSPERLEG + 1] = pgm_read_byte(&cFemurPin[sSN]);
     abSSCServoNum[sSN * NUMSERVOSPERLEG + 2] = pgm_read_byte(&cTibiaPin[sSN]);
-#ifdef c4DOF
-    abSSCServoNum[sSN * NUMSERVOSPERLEG + 3] = pgm_read_byte(&cTarsPin[sSN]);
-#endif
   }
+
   // now lets loop through and get information and set servos to 1500
-  for (sSN = 0; sSN < 6 * NUMSERVOSPERLEG; sSN++ ) {
+  for (sSN = 0; sSN < 6 * NUMSERVOSPERLEG; sSN++ ) 
+  {
     asOffsets[sSN] = 0;
     asOffsetsRead[sSN] = 0;
 
     SSCSerial.print("R");
     SSCSerial.println(32 + abSSCServoNum[sSN], DEC);
+  
     // now read in the current value...  Maybe should use atoi...
     cbRead = SSCRead((byte*)szTemp, sizeof(szTemp), 10000, 13);
     if (cbRead > 0)
@@ -421,18 +421,18 @@ void ServoDriver::FindServoOffsets()
   }
 
   // OK lets move all of the servos to their zero point.
-  Serial.println("Find Servo Zeros.\n$-Exit, +- changes, *-change servo");
-  Serial.println("    0-5 Chooses a leg, C-Coxa, F-Femur, T-Tibia");
+  DBGSerial.println("Find Servo Zeros.\n$-Exit, +- changes, *-change servo");
+  DBGSerial.println("    0-5 Chooses a leg, C-Coxa, F-Femur, T-Tibia");
 
   sSN = true;
   while (!fExit) {
     if (fNew) {
-      Serial.print("Servo: ");
-      Serial.print(apszLegs[sSN / NUMSERVOSPERLEG]);
-      Serial.print(apszLJoints[sSN % NUMSERVOSPERLEG]);
-      Serial.print("(");
-      Serial.print(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
-      Serial.println(")");
+      DBGSerial.print("Servo: ");
+      DBGSerial.print(apszLegs[sSN / NUMSERVOSPERLEG]);
+      DBGSerial.print(apszLJoints[sSN % NUMSERVOSPERLEG]);
+      DBGSerial.print("(");
+      DBGSerial.print(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
+      DBGSerial.println(")");
 
       // Now lets wiggle the servo
       SSCSerial.print("#");
@@ -460,7 +460,7 @@ void ServoDriver::FindServoOffsets()
     }
 
     //get user entered data
-    data = Serial.read();
+    data = DBGSerial.read();
     //if data received
     if (data != -1) 	{
       if (data == '$')
@@ -472,8 +472,8 @@ void ServoDriver::FindServoOffsets()
         else
           asOffsets[sSN] -= 5;		// increment by 5us
 
-        Serial.print("    ");
-        Serial.println(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
+        DBGSerial.print("    ");
+        DBGSerial.println(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
 
         SSCSerial.print("#");
         SSCSerial.print(abSSCServoNum[sSN], DEC);
@@ -503,20 +503,20 @@ void ServoDriver::FindServoOffsets()
       }
     }
   }
-  Serial.print("Find Servo exit ");
+  DBGSerial.print("Find Servo exit ");
   for (sSN = 0; sSN < 6 * NUMSERVOSPERLEG; sSN++) {
-    Serial.print("Servo: ");
-    Serial.print(apszLegs[sSN / NUMSERVOSPERLEG]);
-    Serial.print(apszLJoints[sSN % NUMSERVOSPERLEG]);
-    Serial.print("(");
-    Serial.print(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
-    Serial.println(")");
+    DBGSerial.print("Servo: ");
+    DBGSerial.print(apszLegs[sSN / NUMSERVOSPERLEG]);
+    DBGSerial.print(apszLJoints[sSN % NUMSERVOSPERLEG]);
+    DBGSerial.print("(");
+    DBGSerial.print(asOffsetsRead[sSN] + asOffsets[sSN], DEC);
+    DBGSerial.println(")");
   }
 
-  Serial.print("\nSave Changes? Y/N: ");
+  DBGSerial.print("\nSave Changes? Y/N: ");
 
   //get user entered data
-  while (((data = Serial.read()) == -1) || ((data >= 10) && (data <= 15)))
+  while (((data = DBGSerial.read()) == -1) || ((data >= 10) && (data <= 15)))
     ;
 
   if ((data == 'Y') || (data == 'y')) {
@@ -540,12 +540,13 @@ void ServoDriver::FindServoOffsets()
     SSCSerial.println("g0000");    // tell it that we are done in the boot section so go run the normall SSC stuff...
     delay(500);                // Give it some time to boot up...
 
-  } else {
+  } 
+  else 
+  {
     void LoadServosConfig();
   }
 
   FreeServos();
-
 }
 #endif  // OPT_FIND_SERVO_OFFSETS
 

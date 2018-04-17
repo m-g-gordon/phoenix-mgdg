@@ -6,13 +6,17 @@ boolean g_fShowDebugPrompt = true;
 boolean g_fDebugOutput = true;
 
 
+int ptctr = 0;
+int ptxpos[] = { 900, 1100, 1300, 1500, 1800, 2100};
+int ptypos[] = { 1500, 1500, 1500, 1500, 1500, 1500};
+
 //==============================================================================
 // BlueTooth TerminalMonitor - Simple background task checks to see if the user is asking
 // us to do anything, like varous commands, update debug levels and the like.
 //==============================================================================
 bool TerminalMonitor(void)
 {
-  byte szCmdLine[12];  // currently pretty simple command lines...
+  char szCmdLine[12];  // currently pretty simple command lines...
   int ich;
   int ch;
   // See if we need to output a prompt.
@@ -49,13 +53,13 @@ bool TerminalMonitor(void)
     szCmdLine[ich] = '\0';    // go ahead and null terminate it...
 
     DBGSerial.print("Serial Cmd Line: [");
-    DBGSerial.write(szCmdLine, ich);
+    DBGSerial.print(String(szCmdLine));
     DBGSerial.println("]");
 
     // So see what are command is.
     if (ich == 0)
     {
-      g_fShowDebugPrompt = true;
+      // g_fShowDebugPrompt = true;
     }
     else if ((ich == 1) && ((szCmdLine[0] == 'd') || (szCmdLine[0] == 'D')))
     {
@@ -95,17 +99,19 @@ bool TerminalMonitor(void)
     }
     else if ((ich == 1) && ((szCmdLine[0] == 'm') || (szCmdLine[0] == 'M')))
     {
-      DBGSerial.print("Maestro Mode: ptcntr=");
-      //     DBGSerial.print( String(ptcntr));
+      g_fShowDebugPrompt = false;  // Do not redraw all the options
+      
+      DBGSerial.print("PAN & TILT Mode: ptcntr=");
+      DBGSerial.print( String(ptctr));
       DBGSerial.println("");
 
-      //g_PTServoDriver.setTarget (PT_PAN, 4*ptxpos[ptcntr]);
-      //delay(10);
-      //g_PTServoDriver.setTarget (PT_TILT, 4*ptypos[ptcntr]);
-      //delay(10);
+      g_ServoDriver.UpdatePanPosition(PAN_ON_SSC32, ptxpos[ptctr]);
+      g_ServoDriver.UpdateTiltPosition(TILT_ON_SSC32, ptypos[ptctr]);
 
-      //    ptcntr++;
-      //  if(ptcntr > 3) ptcntr = 0;
+      delay(200);
+
+      ptctr++;
+      if(ptctr > 5) ptctr = 0;
     }
     else if ((ich == 1) && ((szCmdLine[0] == 'v') || (szCmdLine[0] == 'V')))
     {

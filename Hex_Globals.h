@@ -8,6 +8,7 @@
 #include <stdarg.h>
 
 #include "Hex_Cfg.h"
+
 #include "PololuMaestro.h"
 #include "ServoDriver.h"
 #include "InputController.h"
@@ -57,15 +58,7 @@ extern boolean          g_fDebugOutput;
 
 #if 0
 
-//[gait]
-extern byte		GaitType;			//Gait type
-extern short	NomGaitSpeed;		//Nominal speed of the gait
 
-//[Single Leg Control]
-extern byte		SelectedLeg;
-extern short		SLLegX;
-extern short		SLLegZ;
-extern boolean		fSLHold;		 	//Single leg control mode
 
 
 #endif

@@ -11,7 +11,8 @@ void voltageSetup() {
 double voltageRead() {
    //put your main code here, to run repeatedly:
   int volt = analogRead(VOLTSENSOR);
-  volt -= offset;
+  delay(5);
+  // volt += offset;
   double voltage = map(volt, 0, 1023, 0, 2500);
   voltage /=100;
   return voltage;

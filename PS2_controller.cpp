@@ -128,7 +128,6 @@ void InputController::Init(void)
 {
     int error;
 
-    //error = ps2x.config_gamepad(57, 55, 56, 54);  // Setup gamepad (clock, command, attention, data) pins
     error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT);  // Setup gamepad (clock, command, attention, data) pins
 
     g_BodyYOffset = 65;  // 0 - Devon wanted...
@@ -170,8 +169,7 @@ void InputController::ControlInput(void)
     }
     
     // Then try to receive a packet of information from the PS2.
-    // Then try to receive a packet of information from the PS2.
-    ps2x.read_gamepad();          //read controller and set large motor to spin at 'vibrate' speed
+    ps2x.read_gamepad();          //read ps-2 controller
 
     // Wish the library had a valid way to verify that the read_gamepad succeeded... Will hack for now
     if ((ps2x.Analog(1) & 0xf0) == 0x70) {

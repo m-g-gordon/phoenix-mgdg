@@ -22,15 +22,15 @@ bool TerminalMonitor(void)
   // See if we need to output a prompt.
   if (g_fShowDebugPrompt) {
     DBGSerial.println("Arduino Phoenix Monitor");
-    DBGSerial.println("D - Toggle debug on or off");
-    DBGSerial.println("C - Centre all body Servos");
-    DBGSerial.println("O - Enter SSC-32 Servo offset mode");
+    //DBGSerial.println("D - Toggle debug on or off");
+    DBGSerial.println("C - Centre all Body Servos");
+    // DBGSerial.println("O - Enter SSC-32 Servo offset mode");
     DBGSerial.println("X - Report Version of SSC-32");
-    DBGSerial.println("M - Enter Pan-Tilt mode");
+    DBGSerial.println("M - Cycle Pan-Tilt mode");
     DBGSerial.println("V - Toggle Video Streaming");
     DBGSerial.println("B - Read Battery Voltage");
     DBGSerial.println("L - Toggle Headlights");
-    DBGSerial.println("S - SSC Forwarder");
+    DBGSerial.println("U - Turn on Ultrasonics");
     DBGSerial.println("? - Show this List");
     DBGSerial.println("! - Start/Stop Robot");
     g_fShowDebugPrompt = false;
@@ -68,6 +68,17 @@ bool TerminalMonitor(void)
         DBGSerial.println("Debug is on");
       else
         DBGSerial.println("Debug is off");
+    }
+    else if ((ich == 1) && ((szCmdLine[0] == 'u') || (szCmdLine[0] == 'U')))
+    {
+      g_fDebugOutput = !g_fDebugOutput;
+      if (g_ControlState.UseUltrasonics)
+      {
+        DBGSerial.println("Ultrasonics are on");
+        reportUltrasonicDistances();
+      }
+      else
+        DBGSerial.println("OFF Enable Ultrasonics First");
     }
     else if ((ich == 1) && (szCmdLine[0] == '!'))
     {

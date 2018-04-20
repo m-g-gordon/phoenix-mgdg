@@ -1,3 +1,5 @@
+#include <TimerThree.h>
+
 #include "Hex_Globals.h"
 #include "Hex_Cfg.h"
 
@@ -19,7 +21,10 @@ double voltageRead() {
 }
 
 
-extern boolean g_fLowVoltageShutdown;    // If set the bot shuts down because the input voltage is to low
+extern void blinkCallback();
+
+
+extern boolean g_fLowVoltageShutdown;    // If set the bot shuts down because the input voltage is too low
 
 // Part of Original Phoenix code. Not used
 bool CheckVoltage() {
@@ -49,8 +54,29 @@ bool CheckVoltage() {
             g_ControlState.fHexOn = false;
 
             // Setup Blink on Status LED
+            Timer3.initialize(500000);         // initialize timer1, and set a 1/2 second period
+            Timer3.attachInterrupt(blinkCallback);  // attaches callback() as a timer overflow interrupt
         }
     } 
 
     return g_fLowVoltageShutdown;
 }
+
+
+bool bLedOn = true;
+
+void blinkCallback()
+{
+  if (bLedOn)
+  {
+    digitalWrite(STATUSLED, LOW);   // set the LED off
+    bLedOn = false;
+  }
+  else
+  {
+    digitalWrite(STATUSLED, HIGH);    // set the LED on
+    bLedOn=true;
+  }
+}
+
+

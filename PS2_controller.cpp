@@ -112,6 +112,8 @@ long lastToggleTime = -1;
 // General purpose variable to keep track of timing
 long inputTimerStart = 0;
 
+// this variable helps debounce ultrasonic state on ControlState
+long lastUltrasonicToggleTime = -1;
 
 // some external or forward function references.
 extern void MSound(uint8_t _pin, byte cNotes, ...);
@@ -142,6 +144,8 @@ void InputController::Init(void)
     g_ControlState.SpeedControl = 100;    // Sort of migrate stuff in from Devon.
     g_ControlState.HEADLIGHTS = false;
     g_ControlState.VIDEO_TRX = false;
+
+    g_ControlState.UseUltrasonics = false;
 }
 
 //==============================================================================
@@ -166,6 +170,11 @@ void InputController::ControlInput(void)
     if(lastToggleTime == -1)
     {
       lastToggleTime = inputTimerStart;
+    }
+
+    if(lastUltrasonicToggleTime == -1)
+    {
+      lastUltrasonicToggleTime = inputTimerStart;
     }
     
     // Then try to receive a packet of information from the PS2.
@@ -248,6 +257,18 @@ void InputController::ControlInput(void)
           }
         }
 
+        long durationSinceLastUltrasonicToggle = inputTimerStart - lastUltrasonicToggleTime;
+        if(durationSinceLastUltrasonicToggle > 1000) 
+        {
+          //Turn Video Camera On/Off
+          if (ps2x.Button(PSB_CIRCLE))
+          {
+            MSound (SOUND_PIN, 2, 50, 2000, 50, 2250);
+            g_ControlState.UseUltrasonics = !g_ControlState.UseUltrasonics;
+            lastUltrasonicToggleTime = millis();
+          }
+        }
+
         // END CODE ADDED BY MGGORDON AND DGREENAWAY
 
         if (g_ControlState.fHexOn) {
@@ -280,20 +301,20 @@ void InputController::ControlInput(void)
             }
     
             //Single leg mode fNO
-            if (ps2x.ButtonPressed(PSB_CIRCLE)) {// O - Circle Button Test
-                if (abs(g_ControlState.TravelLength.x)<cTravelDeadZone && abs(g_ControlState.TravelLength.z)<cTravelDeadZone 
-                        && abs(g_ControlState.TravelLength.y*2)<cTravelDeadZone )   {
-                    //Sound SOUND_PIN,[50\4000]
-                    if (ControlMode != SINGLELEGMODE) {
-                        ControlMode = SINGLELEGMODE;
-                            if (g_ControlState.SelectedLeg == 255)  //Select leg if none is selected
-                                g_ControlState.SelectedLeg=cRF; //Startleg
-                    } else {
-                        ControlMode = WALKMODE;
-                        g_ControlState.SelectedLeg=255;
-                    }
-                }
-            }      
+//            if (ps2x.ButtonPressed(PSB_CIRCLE)) {// O - Circle Button Test
+//                if (abs(g_ControlState.TravelLength.x)<cTravelDeadZone && abs(g_ControlState.TravelLength.z)<cTravelDeadZone 
+//                        && abs(g_ControlState.TravelLength.y*2)<cTravelDeadZone )   {
+//                    //Sound SOUND_PIN,[50\4000]
+//                    if (ControlMode != SINGLELEGMODE) {
+//                        ControlMode = SINGLELEGMODE;
+//                            if (g_ControlState.SelectedLeg == 255)  //Select leg if none is selected
+//                                g_ControlState.SelectedLeg=cRF; //Startleg
+//                    } else {
+//                        ControlMode = WALKMODE;
+//                        g_ControlState.SelectedLeg=255;
+//                    }
+//                }
+//            }      
 
 //#ifdef OPT_GPPLAYER
 //            // GP Player Mode X
@@ -312,7 +333,7 @@ void InputController::ControlInput(void)
                 if (g_BodyYOffset>0) 
                     g_BodyYOffset = 0;
                 else
-                    g_BodyYOffset = 35;
+                    g_BodyYOffset = 100;
             }
             
             //[Common functions]
@@ -333,13 +354,14 @@ void InputController::ControlInput(void)
 
             //[Walk functions]
             if (ControlMode == WALKMODE) {
-                //Switch gates
+                //Switch gaits
                 if (ps2x.ButtonPressed(PSB_SELECT)            // Select Button Test
                         && abs(g_ControlState.TravelLength.x)<cTravelDeadZone //No movement
                         && abs(g_ControlState.TravelLength.z)<cTravelDeadZone 
-                        && abs(g_ControlState.TravelLength.y*2)<cTravelDeadZone  ) {
+                        && abs(g_ControlState.TravelLength.y*2)<cTravelDeadZone  ) 
+                {
                     g_ControlState.GaitType = g_ControlState.GaitType+1;                    // Go to the next gait...
-                    if (g_ControlState.GaitType<NUM_GAITS) {                 // Make sure we did not exceed number of gaits...
+                    if (g_ControlState.GaitType < NUM_GAITS) {                 // Make sure we did not exceed number of gaits...
                         MSound(SOUND_PIN, 1, 50, 2000);  //sound SOUND_PIN, [50\4000]
                     } else {
                         MSound (SOUND_PIN, 2, 50, 2000, 50, 2250); 
@@ -428,24 +450,24 @@ void InputController::ControlInput(void)
 
 #ifdef OPT_GPPLAYER
             //[GPPlayer functions]
-            if (ControlMode == GPPLAYERMODE) {
-
-                //Switch between sequences
-                if (ps2x.ButtonPressed(PSB_SELECT)) { // Select Button Test
-                    if (!g_ServoDriver.FIsGPSeqActive() ) {
-                        if (GPSeq < 5) {  //Max sequence
-                            MSound (SOUND_PIN, 1, 50, 1500);  //sound SOUND_PIN, [50\3000]
-                            GPSeq = GPSeq+1;
-                        } else {
-                            MSound (SOUND_PIN, 2, 50, 2000, 50, 2250);//Sound SOUND_PIN,[50\4000, 50\4500]
-                            GPSeq=0;
-                        }
-                    }
-                }
-                //Start Sequence
-                if (ps2x.ButtonPressed(PSB_R2))// R2 Button Test
-                    g_ServoDriver.GPStartSeq(GPSeq);
-            }
+//            if (ControlMode == GPPLAYERMODE) {
+//
+//                //Switch between sequences
+//                if (ps2x.ButtonPressed(PSB_SELECT)) { // Select Button Test
+//                    if (!g_ServoDriver.FIsGPSeqActive() ) {
+//                        if (GPSeq < 5) {  //Max sequence
+//                            MSound (SOUND_PIN, 1, 50, 1500);  //sound SOUND_PIN, [50\3000]
+//                            GPSeq = GPSeq+1;
+//                        } else {
+//                            MSound (SOUND_PIN, 2, 50, 2000, 50, 2250);//Sound SOUND_PIN,[50\4000, 50\4500]
+//                            GPSeq=0;
+//                        }
+//                    }
+//                }
+//                //Start Sequence
+//                if (ps2x.ButtonPressed(PSB_R2))// R2 Button Test
+//                    g_ServoDriver.GPStartSeq(GPSeq);
+//            }
 #endif // OPT_GPPLAYER
 
             //Calculate walking time delay
@@ -462,6 +484,7 @@ void InputController::ControlInput(void)
           g_sPS2ErrorCnt++;    // Increment the error count and if to many errors, turn off the robot.
       else if (g_ControlState.fHexOn)
           PS2TurnRobotOff();
+       
        //This line is only required for use with older version of the PS2 library.
        //ps2x.reconfig_gamepad();
     }

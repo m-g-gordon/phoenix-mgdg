@@ -82,6 +82,8 @@
   #define PS2_CLK         9
   #define HEADLIGHT      39
   #define VOLTSENSOR     A0
+
+ 
   #define STATUSLED      10
   
 

@@ -18,7 +18,6 @@ void InitializeUltrasonic() {
   pinMode(trigRight,OUTPUT);
   pinMode(echoBack,INPUT);
   pinMode(trigBack,OUTPUT);
-  pinMode(SOUND_PIN, OUTPUT);
 }
 
 void calcSensorDistances() {
@@ -106,5 +105,24 @@ float getBackDistance(){
     float dBack = durBack * 0.034 /2;
 
     return dBack;
+}
+
+void reportUltrasonicDistances() 
+{
+    float distanceFront = 0.0, distanceLeft = 0.0, distanceBack = 0.0, distanceRight = 0.0;
+
+    distanceFront = getFrontDistance();
+    distanceRight = getRightDistance();
+    distanceBack = getBackDistance();
+    distanceLeft = getLeftDistance();
+    
+    DBGSerial.print("Front Distance: ");
+    DBGSerial.println(getFrontDistance());
+    DBGSerial.print("Left Distance: ");
+    DBGSerial.println(getLeftDistance());
+    DBGSerial.print("Right Distance: ");
+    DBGSerial.println(getRightDistance());
+    DBGSerial.print("Back Distance: ");
+    DBGSerial.println(getBackDistance());
 }
 

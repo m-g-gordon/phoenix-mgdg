@@ -135,7 +135,7 @@ void ServoDriver::GPPlayer(void)
   byte abStat[4];
   byte cbRead;
 
-  // BUGBUG:: Should integrate in the newer stuff to all us to control the speed of a sequence.
+  // BUGBUG:: Should integrate in the newer stuff to allow us to control the speed of a sequence.
   //Start sequence
   if (_fGPActive) {
     g_InputController.AllowControllerInterrupts(false);    // If on xbee on hserial tell hserial to not processess...

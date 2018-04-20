@@ -78,6 +78,7 @@ extern float getLeftDistance();
 extern float getRightDistance();
 extern float getFrontDistance();
 extern void calcSensorDistances();
+extern void reportUltrasonicDistances();
 
 // Voltage Sensor
 extern void voltageSetup();

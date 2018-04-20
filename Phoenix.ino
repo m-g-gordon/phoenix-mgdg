@@ -81,17 +81,6 @@ static const short cFemurHornOffset1[] PROGMEM = {cRRFemurHornOffset1,  cRMFemur
 #define CFEMURHORNOFFSET1(LEGI)  (cFemurHornOffset1)
 #endif
 
-#ifdef c4DOF
-#ifdef cRRTarsHornOffset1   // per leg configuration
-static const short cTarsHornOffset1[] PROGMEM = {cRRTarsHornOffset1,  cRMTarsHornOffset1,  cRFTarsHornOffset1,  cLRTarsHornOffset1,  cLMTarsHornOffset1,  cLFTarsHornOffset1};
-#define CTARSHORNOFFSET1(LEGI) ((short)pgm_read_word(&cTarsHornOffset1[LEGI]))
-#else   // Fixed per leg, if not defined 0
-#ifndef cTarsHornOffset1
-#define cTarsHornOffset1  0
-#endif
-#define CTARSHORNOFFSET1(LEGI)  cTarsHornOffset1
-#endif
-#endif
 
 //Min / imax values
 const short cCoxaMin1[] PROGMEM = {cRRCoxaMin1,  cRMCoxaMin1,  cRFCoxaMin1,  cLRCoxaMin1,  cLMCoxaMin1,  cLFCoxaMin1};
@@ -100,7 +89,6 @@ const short cFemurMin1[] PROGMEM = {cRRFemurMin1, cRMFemurMin1, cRFFemurMin1, cL
 const short cFemurMax1[] PROGMEM = {cRRFemurMax1, cRMFemurMax1, cRFFemurMax1, cLRFemurMax1, cLMFemurMax1, cLFFemurMax1};
 const short cTibiaMin1[] PROGMEM = {cRRTibiaMin1, cRMTibiaMin1, cRFTibiaMin1, cLRTibiaMin1, cLMTibiaMin1, cLFTibiaMin1};
 const short cTibiaMax1[] PROGMEM = {cRRTibiaMax1, cRMTibiaMax1, cRFTibiaMax1, cLRTibiaMax1, cLMTibiaMax1, cLFTibiaMax1};
-
 
 
 //Leg Lengths
@@ -293,6 +281,20 @@ void setup() {
   g_fShowDebugPrompt = true;
   g_fDebugOutput = false;
 
+  pinMode(SOUND_PIN, OUTPUT);
+  digitalWrite(SOUND_PIN, LOW);
+  
+  pinMode(HEADLIGHT, OUTPUT);
+  pinMode(VIDEOTRANSMIT, OUTPUT);
+  pinMode(VOLTSENSOR, INPUT);
+  pinMode(STATUSLED, OUTPUT);
+  digitalWrite(STATUSLED, HIGH);
+
+  g_VideoTRXOn = false;
+  digitalWrite(VIDEOTRANSMIT, LOW);
+  g_HeadlightsOn = false;
+  digitalWrite(HEADLIGHT, LOW);
+
   // BlueTooth Serial
   DBGSerial.begin(9600);
 
@@ -303,12 +305,10 @@ void setup() {
   // Init our ServoDriver
   g_ServoDriver.Init();
 
-
   //Checks to see if our Servo Driver support a GP Player
   pinMode(PS2_CMD, INPUT);
   if (!digitalRead(PS2_CMD))
   {
-
     g_ServoDriver.SSCForwarder();
   }
 
@@ -316,14 +316,6 @@ void setup() {
   MAESTROSerial.begin(9600);
 #endif
   
-  
-
-  pinMode(HEADLIGHT, OUTPUT);
-  pinMode(VIDEOTRANSMIT, OUTPUT);
-  pinMode(VOLTSENSOR, INPUT);
-  pinMode(STATUSLED, OUTPUT);
-  digitalWrite(STATUSLED, HIGH);
-
   // Initial values for pan and tilt servo
   ptposition_x = 1450;
   ptposition_y = 1500;
@@ -373,15 +365,11 @@ void setup() {
   GaitSelect();
 
   g_InputController.Init();
-
-  g_VideoTRXOn = false;
-  digitalWrite(VIDEOTRANSMIT, LOW);
-  g_HeadlightsOn = false;
-  digitalWrite(HEADLIGHT, LOW);
-
+  
   // Servo Driver
   ServoMoveTime = 150;
   g_ControlState.fHexOn = 0;
+  g_ControlState.fPrev_HexOn = 0;
   g_fLowVoltageShutdown = false;
 }
 
@@ -495,7 +483,7 @@ void loop(void)
 
 #ifdef OPT_GPPLAYER
   //GP Player
-  g_ServoDriver.GPPlayer();
+  // g_ServoDriver.GPPlayer();
 #endif
 
   //Single leg control
@@ -616,7 +604,6 @@ void loop(void)
       wDelayTime = (min(max ((PrevServoMoveTime - CycleTime), 1), NomGaitSpeed));
       delay (wDelayTime);
     }
-
   } 
   else 
   {
@@ -633,15 +620,13 @@ void loop(void)
       g_ServoDriver.FreeServos();
     }
 
-    // We also have a bluetooth debug monitor that allows us to make rudimentary commands and stuff
-    // check things. call it here..
-
-    if (TerminalMonitor())
-      return;
-
     delay(20);  // give a pause between times we call if nothing is happening
   }
 
+  // We also have a bluetooth debug monitor that allows us to make rudimentary commands and stuff
+  // check things. call it here..
+  TerminalMonitor();
+  
   // Xan said Needed to be here...
   g_ServoDriver.CommitServoDriver(ServoMoveTime);
   PrevServoMoveTime = ServoMoveTime;
